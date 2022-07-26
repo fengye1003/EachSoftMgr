@@ -12,7 +12,9 @@ namespace RuntimeInstaller
         {
             Log.SaveLog("EachSoft Runtime Installer v.1.0.0.0");
             Log.SaveLog("Initializing installer, please wait...");
+            string module;
             #region ConfigReader
+            module = "ConfigLoader";
             Log.SaveLog("Getting config from local file...");
             Hashtable htStandard = new Hashtable
             {
@@ -22,6 +24,7 @@ namespace RuntimeInstaller
                 { "runtimeURL", "none" },//运行时直链下载地址
                 { "runtimeArgs", "-I" },//运行时安装参数
                 { "runtimeType", "exe" },//运行时后缀
+                { "redownloadRuntimeIfRuntimeMD5IsIncorrect", "true" },//如果运行时MD5不正确是否重新下载
                 { "afterArgs", "-I" },//安装包安装参数
                 { "doPackageChecking", "true" },//是否校验运行时
                 { "doRuntimeChecking", "true" },//是否校验安装包
@@ -30,6 +33,7 @@ namespace RuntimeInstaller
                 { "packagePath", "fromURL" },//安装包路径,若为fromURL就从指定链接获取
                 { "packageURL", "none" },//安装包直链下载地址
                 { "packageType", "exe" },//安装包文件后缀
+                { "redownloadRuntimeIfPackageMD5IsIncorrect", "true" },//如果安装包MD5不正确是否重新下载
                 { "latestRuntimeMD5-URL", "none" },//运行时MD5链接(可用于检查更新)
                 { "latestPackageMD5-URL", "none" },//安装包MD5链接(可用于检查更新)
                 { "waitUntilExit", "true" },//是否等待安装进程退出
@@ -42,10 +46,11 @@ namespace RuntimeInstaller
             {
                 output = true;
             }
-            Log.SaveLog("Config file loaded.", "ConfigLoader", output);
+            Log.SaveLog("Config file loaded.", module, output);
             //配置文件读取成功
             #endregion
             #region RuntimeExistingChecker
+            module = "RuntimeExistingChecker";
             Log.SaveLog("Locating runtime package...");
             //定位运行时
             if (config["runtimePath"] as string == "fromURL") 
@@ -57,7 +62,7 @@ namespace RuntimeInstaller
                 }
                 else
                 {
-                    Log.SaveLog("Invaild URL", "Downloader", output);
+                    Log.SaveLog("Invaild URL", "Downloader:" + module, output);
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
                     return;
@@ -73,7 +78,7 @@ namespace RuntimeInstaller
                     }
                     else
                     {
-                        Log.SaveLog("Unable to download runtime package : File does not exist.", "HttpDownload", output);
+                        Log.SaveLog("Unable to download runtime package : File does not exist.", module, output);
                         //下载没有出现异常,但是文件不存在
                         Console.WriteLine("Failed to install.View log file for details.");
                         Console.WriteLine("Press any key to exit...");
@@ -147,10 +152,31 @@ namespace RuntimeInstaller
             }
             #endregion
             #region RuntimeMD5Checker
+            module = "RuntimeMD5Checker";
             if (config["doRuntimeChecking"] as string == "true")
             {
-                Log.SaveLog("Checking the MD5 of runtime package...", "MD5Checker", output);
-                GetMD5Hash(config["runtimePath"] as string);
+                Log.SaveLog("Checking the MD5 of runtime package...", module, output);
+                //开始检查运行库MD5
+                string runtimeMD5;
+                try
+                {
+                    runtimeMD5 = GetMD5Hash(config["runtimePath"] as string);
+                    Log.SaveLog($"The MD5 of runtime is \"{runtimeMD5}\".", module, output);
+                    //输出运行库MD5，方便检查
+                }
+                catch (Exception ex)
+                {
+                    Log.SaveLog("Unable to check the MD5 of runtime. ", module, output);
+                    Log.SaveLog(ex.ToString(), module, output);
+                    Console.WriteLine("Failed to install.View log file for details.");
+                    Console.WriteLine("Press any key to exit...");
+                    return;
+                }
+                if (config["runtimeMD5"] as string == runtimeMD5) 
+                {
+                    Log.SaveLog("Runtime package's MD5 is correct.", module, output);
+                }
+
             }
             #endregion
         }
@@ -203,7 +229,7 @@ namespace RuntimeInstaller
         }
 
         //计算文件的MD5码
-        public static string? GetMD5Hash(string pathName)
+        public static string GetMD5Hash(string pathName)
         {
             string strResult;
             string strHashData;
