@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections;
 using System.Security.Cryptography;
 using System.Net;
+using System.Text;
 
 namespace RuntimeInstaller
 {
@@ -25,6 +26,7 @@ namespace RuntimeInstaller
                 { "runtimeArgs", "-I" },//运行时安装参数
                 { "runtimeType", "exe" },//运行时后缀
                 { "allowRedownloadRuntime", "true" },//如果运行时MD5不正确是否重新下载
+                { "allowSkipOnlineRuntimeChecking", "true" },//如果运行时MD5不是URL指定的最新版且无法下载时是否允许跳过
                 { "afterArgs", "-I" },//安装包安装参数
                 { "doPackageChecking", "true" },//是否校验运行时
                 { "doRuntimeChecking", "true" },//是否校验安装包
@@ -34,6 +36,7 @@ namespace RuntimeInstaller
                 { "packageURL", "none" },//安装包直链下载地址
                 { "packageType", "exe" },//安装包文件后缀
                 { "allowRedownloadPackage", "true" },//如果安装包MD5不正确是否重新下载
+                { "allowSkipOnlinePackageChecking", "true" },//如果安装包MD5不是URL指定的最新版且无法下载时是否允许跳过
                 { "latestRuntimeMD5-URL", "none" },//运行时MD5链接(可用于检查更新)
                 { "latestPackageMD5-URL", "none" },//安装包MD5链接(可用于检查更新)
                 { "waitUntilExit", "true" },//是否等待安装进程退出
@@ -153,11 +156,11 @@ namespace RuntimeInstaller
             #endregion
             #region RuntimeMD5Checker
             module = "RuntimeMD5Checker";
+            string runtimeMD5;
             if (config["doRuntimeChecking"] as string == "true")
             {
                 Log.SaveLog("Checking the MD5 of runtime package...", module, output);
                 //开始检查运行库MD5
-                string runtimeMD5;
                 try
                 {
                     runtimeMD5 = GetMD5Hash(config["runtimePath"] as string);
@@ -223,6 +226,72 @@ namespace RuntimeInstaller
                     }
                 }
 
+                if (((string)config["latestRuntimeMD5-URL"]).Contains("://"))
+                {
+                    try
+                    {
+                        if (HttpGet(config["latestRuntimeMD5-URL"] as string) == runtimeMD5) 
+                        {
+                            Log.SaveLog("Runtime checked with Internet.", "OnlineMD5", output);
+                        }
+                        else
+                        {
+                            Log.SaveLog("Runtime is not the version from Internet.Trying to download...", "OnlineMD5", output);
+
+                            try
+                            {
+                                HttpDownload(config["runtimeURL"] as string, $"./runtime.{config["runtimeType"]}");
+                                //开始下载
+                                if (File.Exists($"./runtime.{config["runtimeType"]}"))
+                                {
+                                    Log.SaveLog("Runtime package downloading successful.", "HttpDownload", output);
+                                    //下载成功
+                                }
+                                else
+                                {
+                                    Log.SaveLog("Unable to download runtime package : File does not exist.", module, output);
+                                    //下载没有出现异常,但是文件不存在
+                                    Console.WriteLine("Failed to install.View log file for details.");
+                                    Console.WriteLine("Press any key to exit...");
+                                    Console.ReadKey();
+                                    return;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.SaveLog(ex.ToString(), "HttpDownload", output);
+                                Log.SaveLog("Unable to download runtime package : Unexpected exception.", "HttpDownload", output);
+                                //下载出现异常
+                                Console.WriteLine("Failed to install the newest version from Internet. View log file for details.");
+                                //是否继续安装视情况而定
+                                if (config["allowSkipOnlineRuntimeChecking"] as string != "true") 
+                                {
+                                    Console.WriteLine("Press any key to exit...");
+                                    Console.ReadKey();
+                                }
+                            }
+
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.SaveLog(ex.ToString(), "OnlineMD5", output);
+                        Log.SaveLog("Unable to download runtime package : Unexpected exception.", "OnlineMD5", output);
+                        //GET出现异常
+                        Console.WriteLine("Failed to check the MD5 from Internet. View log file for details.");
+                        //是否继续安装视情况而定
+                        if (config["allowSkipOnlineRuntimeChecking"] as string != "true")
+                        {
+                            Console.WriteLine("Press any key to exit...");
+                            Console.ReadKey();
+                        }
+                    }
+                }
+                else
+                {
+                    Log.SaveLog("Warning : Invaild latestRuntimeMD5-URL. Program will skip online checking.", module, output);
+                }
             }
             #endregion
             #region PackageExistingChecker
@@ -329,11 +398,12 @@ namespace RuntimeInstaller
             #endregion
             #region PackageMD5Checker
             module = "PackageMD5Checker";
+            string packageMD5;
             if (config["doPackageChecking"] as string == "true")
             {
                 Log.SaveLog("Checking the MD5 of package...", module, output);
                 //开始检查运行库MD5
-                string packageMD5;
+                
                 try
                 {
                     packageMD5 = GetMD5Hash(config["packagePath"] as string);
@@ -399,14 +469,99 @@ namespace RuntimeInstaller
                     }
                 }
 
+                if (((string)config["latestPackageMD5-URL"]).Contains("://"))
+                {
+                    try
+                    {
+                        if (HttpGet(config["latestPackageMD5-URL"] as string) == packageMD5)
+                        {
+                            Log.SaveLog("Package checked with Internet.", "OnlineMD5", output);
+                        }
+                        else
+                        {
+                            Log.SaveLog("Package is not the version from Internet.Trying to download...", "OnlineMD5", output);
+
+                            try
+                            {
+                                HttpDownload(config["packageURL"] as string, $"./package.{config["packageType"]}");
+                                //开始下载
+                                if (File.Exists($"./package.{config["packageType"]}"))
+                                {
+                                    Log.SaveLog("Package downloading successful.", "HttpDownload", output);
+                                    //下载成功
+                                }
+                                else
+                                {
+                                    Log.SaveLog("Unable to download package : File does not exist.", module, output);
+                                    //下载没有出现异常,但是文件不存在
+                                    Console.WriteLine("Failed to install.View log file for details.");
+                                    Console.WriteLine("Press any key to exit...");
+                                    Console.ReadKey();
+                                    return;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.SaveLog(ex.ToString(), "HttpDownload", output);
+                                Log.SaveLog("Unable to download package : Unexpected exception.", "HttpDownload", output);
+                                //下载出现异常
+                                Console.WriteLine("Failed to install the newest version from Internet. View log file for details.");
+                                //是否继续安装视情况而定
+                                if (config["allowSkipOnlinePackageChecking"] as string != "true")
+                                {
+                                    Console.WriteLine("Press any key to exit...");
+                                    Console.ReadKey();
+                                }
+                            }
+
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.SaveLog(ex.ToString(), "OnlineMD5", output);
+                        Log.SaveLog("Unable to download package : Unexpected exception.", "OnlineMD5", output);
+                        //GET出现异常
+                        Console.WriteLine("Failed to check the MD5 from Internet. View log file for details.");
+                        //是否继续安装视情况而定
+                        if (config["allowSkipOnlinePackageChecking"] as string != "true")
+                        {
+                            Console.WriteLine("Press any key to exit...");
+                            Console.ReadKey();
+                        }
+                    }
+                }
+
+
             }
             #endregion
 
             Log.SaveLog("Packages' MD5 checked.", "PackageChecker", output);
 
+
+
         }
 
+        /// <summary>
+        /// 发送GET请求
+        /// </summary>
+        /// <param name="Url"></param>
+        /// <returns></returns>
+        public static string HttpGet(string Url)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
+            request.Method = "GET";
+            request.ContentType = "text/html;charset=UTF-8";
 
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream myResponseStream = response.GetResponseStream();
+            StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
+            string retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            myResponseStream.Close();
+
+            return retString;
+        }
 
         /// <summary>
         /// http下载文件
