@@ -12,6 +12,7 @@ namespace RuntimeInstaller
         {
             Log.SaveLog("EachSoft Runtime Installer v.1.0.0.0");
             Log.SaveLog("Initializing installer, please wait...");
+            #region ConfigReader
             Log.SaveLog("Getting config from local file...");
             Hashtable htStandard = new Hashtable
             {
@@ -42,20 +43,38 @@ namespace RuntimeInstaller
                 output = true;
             }
             Log.SaveLog("Config file loaded.", "ConfigLoader", output);
+            //配置文件读取成功
+            #endregion
+            #region RuntimeExistingChecker
             Log.SaveLog("Locating runtime package...");
+            //定位运行时
             if (config["runtimePath"] as string == "fromURL") 
             {
                 Log.SaveLog($"Downloading runtime package from \"{config["runtimeURL"]}\"...");
+                if (((string)config["runtimeURL"]).Contains("://"))
+                {
+
+                }
+                else
+                {
+                    Log.SaveLog("Invaild URL", "Downloader", output);
+                    Console.WriteLine("Failed to install.View log file for details.");
+                    Console.WriteLine("Press any key to exit...");
+                    return;
+                }
                 try
                 {
                     HttpDownload(config["runtimeURL"] as string, $"./runtime.{config["runtimeType"]}");
+                    //开始下载
                     if (File.Exists($"./runtime.{config["runtimeType"]}")) 
                     {
                         Log.SaveLog("Runtime package downloading successful.", "HttpDownload", output);
+                        //下载成功
                     }
                     else
                     {
                         Log.SaveLog("Unable to download runtime package : File does not exist.", "HttpDownload", output);
+                        //下载没有出现异常,但是文件不存在
                         Console.WriteLine("Failed to install.View log file for details.");
                         Console.WriteLine("Press any key to exit...");
                         Console.ReadKey();
@@ -66,6 +85,7 @@ namespace RuntimeInstaller
                 {
                     Log.SaveLog(ex.ToString(), "HttpDownload", output);
                     Log.SaveLog("Unable to download runtime package : Unexpected exception.", "HttpDownload", output);
+                    //下载出现异常
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
                     return;
@@ -76,19 +96,63 @@ namespace RuntimeInstaller
                 if (File.Exists(config["runtimePath"] as string)) 
                 {
                     Log.SaveLog("Runtime package located.", output);
+                    //成功定位本地运行时
                 }
                 else
                 {
                     Log.SaveLog("Unable to locate runtime package : File does not exist.", "Locating runtime", output);
-                    Console.WriteLine("Failed to install.View log file for details.");
-                    Console.WriteLine("Press any key to exit...");
+                    Log.SaveLog("Preparing for package downloading...", output);
+                    //本地运行时不存在,尝试从网络下载
+                    if (((string)config["runtimeURL"]).Contains("://"))
+                    {
+                        try
+                        {
+                            HttpDownload(config["runtimeURL"] as string, $"./runtime.{config["runtimeType"]}");
+                            //开始下载
+                            if (File.Exists($"./runtime.{config["runtimeType"]}"))
+                            {
+                                Log.SaveLog("Runtime package downloading successful.", "HttpDownload", output);
+                                //下载成功
+                            }
+                            else
+                            {
+                                Log.SaveLog("Unable to download runtime package : File does not exist.", "HttpDownload", output);
+                                //下载没有出现异常,但是文件不存在
+                                Console.WriteLine("Failed to install.View log file for details.");
+                                Console.WriteLine("Press any key to exit...");
+                                Console.ReadKey();
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.SaveLog(ex.ToString(), "HttpDownload", output);
+                            Log.SaveLog("Unable to download runtime package : Unexpected exception.", "HttpDownload", output);
+                            //下载出现异常
+                            Console.WriteLine("Failed to install.View log file for details.");
+                            Console.WriteLine("Press any key to exit...");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        Log.SaveLog("Invaild URL", "Downloader", output);
+                        //URL未指定或出现错误
+                        Console.WriteLine("Failed to install.View log file for details.");
+                        Console.WriteLine("Press any key to exit...");
+                        return;
+                    }
+                    
                 }
             }
+            #endregion
+            #region RuntimeMD5Checker
             if (config["doRuntimeChecking"] as string == "true")
             {
                 Log.SaveLog("Checking the MD5 of runtime package...", "MD5Checker", output);
                 GetMD5Hash(config["runtimePath"] as string);
             }
+            #endregion
         }
 
 
