@@ -546,7 +546,7 @@ namespace RuntimeInstaller
         /// 发送GET请求
         /// </summary>
         /// <param name="Url"></param>
-        /// <returns></returns>
+        /// <returns>请求结果</returns>
         public static string HttpGet(string Url)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
@@ -608,7 +608,11 @@ namespace RuntimeInstaller
             }
         }
 
-        //计算文件的MD5码
+        /// <summary>
+        /// 计算文件MD5
+        /// </summary>
+        /// <param name="pathName">文件路径</param>
+        /// <returns>文件的MD5校验码</returns>
         public static string GetMD5Hash(string pathName)
         {
             string strResult;
