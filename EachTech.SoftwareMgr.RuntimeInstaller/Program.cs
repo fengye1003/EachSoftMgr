@@ -24,7 +24,7 @@ namespace RuntimeInstaller
                 { "runtimeURL", "none" },//运行时直链下载地址
                 { "runtimeArgs", "-I" },//运行时安装参数
                 { "runtimeType", "exe" },//运行时后缀
-                { "redownloadRuntimeIfRuntimeMD5IsIncorrect", "true" },//如果运行时MD5不正确是否重新下载
+                { "allowRedownloadRuntime", "true" },//如果运行时MD5不正确是否重新下载
                 { "afterArgs", "-I" },//安装包安装参数
                 { "doPackageChecking", "true" },//是否校验运行时
                 { "doRuntimeChecking", "true" },//是否校验安装包
@@ -33,7 +33,7 @@ namespace RuntimeInstaller
                 { "packagePath", "fromURL" },//安装包路径,若为fromURL就从指定链接获取
                 { "packageURL", "none" },//安装包直链下载地址
                 { "packageType", "exe" },//安装包文件后缀
-                { "redownloadRuntimeIfPackageMD5IsIncorrect", "true" },//如果安装包MD5不正确是否重新下载
+                { "allowRedownloadPackage", "true" },//如果安装包MD5不正确是否重新下载
                 { "latestRuntimeMD5-URL", "none" },//运行时MD5链接(可用于检查更新)
                 { "latestPackageMD5-URL", "none" },//安装包MD5链接(可用于检查更新)
                 { "waitUntilExit", "true" },//是否等待安装进程退出
@@ -167,6 +167,7 @@ namespace RuntimeInstaller
                 catch (Exception ex)
                 {
                     Log.SaveLog("Unable to check the MD5 of runtime. ", module, output);
+                    //文件MD5未能正确运算 可能原因:权限不足
                     Log.SaveLog(ex.ToString(), module, output);
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
@@ -175,10 +176,234 @@ namespace RuntimeInstaller
                 if (config["runtimeMD5"] as string == runtimeMD5) 
                 {
                     Log.SaveLog("Runtime package's MD5 is correct.", module, output);
+                    //运行库完整
+                }
+                else
+                {
+                    //MD5不正确,程序包可能存在破损
+                    //若允许,重新下载运行库
+                    if (config["allowRedownloadRuntime"] as string == "true")
+                    {
+                        try
+                        {
+                            HttpDownload(config["runtimeURL"] as string, $"./runtime.{config["runtimeType"]}");
+                            //开始下载
+                            if (File.Exists($"./runtime.{config["runtimeType"]}"))
+                            {
+                                Log.SaveLog("Runtime package downloading successful.", "HttpDownload", output);
+                                //下载成功
+                            }
+                            else
+                            {
+                                Log.SaveLog("Unable to download runtime package : File does not exist.", module, output);
+                                //下载没有出现异常,但是文件不存在
+                                Console.WriteLine("Failed to install.View log file for details.");
+                                Console.WriteLine("Press any key to exit...");
+                                Console.ReadKey();
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.SaveLog(ex.ToString(), "HttpDownload", output);
+                            Log.SaveLog("Unable to download runtime package : Unexpected exception.", "HttpDownload", output);
+                            //下载出现异常
+                            Console.WriteLine("Failed to install.View log file for details.");
+                            Console.WriteLine("Press any key to exit...");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        Log.SaveLog("Runtime's MD5 is incorrect. Damaged package.", module, output);
+                        Console.WriteLine("Failed to install.View log file for details.");
+                        Console.WriteLine("Press any key to exit...");
+                        Console.ReadKey();
+                        return;
+                    }
                 }
 
             }
             #endregion
+            #region PackageExistingChecker
+            module = "PackageExistingChecker";
+            Log.SaveLog("Locating Package...");
+            //定位安装包
+            if (config["packagePath"] as string == "fromURL")
+            {
+                Log.SaveLog($"Downloading package from \"{config["packageURL"]}\"...");
+                if (((string)config["packageURL"]).Contains("://"))
+                {
+
+                }
+                else
+                {
+                    Log.SaveLog("Invaild URL", "Downloader:" + module, output);
+                    Console.WriteLine("Failed to install.View log file for details.");
+                    Console.WriteLine("Press any key to exit...");
+                    return;
+                }
+                try
+                {
+                    HttpDownload(config["packageURL"] as string, $"./package.{config["packageType"]}");
+                    //开始下载
+                    if (File.Exists($"./package.{config["packageType"]}"))
+                    {
+                        Log.SaveLog("Package downloading successful.", "HttpDownload", output);
+                        //下载成功
+                    }
+                    else
+                    {
+                        Log.SaveLog("Unable to download package : File does not exist.", module, output);
+                        //下载没有出现异常,但是文件不存在
+                        Console.WriteLine("Failed to install.View log file for details.");
+                        Console.WriteLine("Press any key to exit...");
+                        Console.ReadKey();
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.SaveLog(ex.ToString(), "HttpDownload", output);
+                    Log.SaveLog("Unable to runtime package : Unexpected exception.", "HttpDownload", output);
+                    //下载出现异常
+                    Console.WriteLine("Failed to install.View log file for details.");
+                    Console.WriteLine("Press any key to exit...");
+                    return;
+                }
+            }
+            else
+            {
+                if (File.Exists(config["packagePath"] as string))
+                {
+                    Log.SaveLog("Package located.", output);
+                    //成功定位本安装包
+                }
+                else
+                {
+                    Log.SaveLog("Unable to locate package : File does not exist.", "Locating package", output);
+                    Log.SaveLog("Preparing for package downloading...", output);
+                    //本地安装包不存在,尝试从网络下载
+                    if (((string)config["packageURL"]).Contains("://"))
+                    {
+                        try
+                        {
+                            HttpDownload(config["packageURL"] as string, $"./package. {config["packageType"]}");
+                            //开始下载
+                            if (File.Exists($"./package.{config["packageType"]}"))
+                            {
+                                Log.SaveLog("Package downloading successful.", "HttpDownload", output);
+                                //下载成功
+                            }
+                            else
+                            {
+                                Log.SaveLog("Unable to download package : File does not exist.", "HttpDownload", output);
+                                //下载没有出现异常,但是文件不存在
+                                Console.WriteLine("Failed to install.View log file for details.");
+                                Console.WriteLine("Press any key to exit...");
+                                Console.ReadKey();
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.SaveLog(ex.ToString(), "HttpDownload", output);
+                            Log.SaveLog("Unable to download package : Unexpected exception.", "HttpDownload", output);
+                            //下载出现异常
+                            Console.WriteLine("Failed to install.View log file for details.");
+                            Console.WriteLine("Press any key to exit...");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        Log.SaveLog("Invaild URL", "Downloader", output);
+                        //URL未指定或出现错误
+                        Console.WriteLine("Failed to install.View log file for details.");
+                        Console.WriteLine("Press any key to exit...");
+                        return;
+                    }
+
+                }
+            }
+            #endregion
+            #region PackageMD5Checker
+            module = "PackageMD5Checker";
+            if (config["doPackageChecking"] as string == "true")
+            {
+                Log.SaveLog("Checking the MD5 of package...", module, output);
+                //开始检查运行库MD5
+                string packageMD5;
+                try
+                {
+                    packageMD5 = GetMD5Hash(config["packagePath"] as string);
+                    Log.SaveLog($"The MD5 of package is \"{packageMD5}\".", module, output);
+                    //输出运行库MD5，方便检查
+                }
+                catch (Exception ex)
+                {
+                    Log.SaveLog("Unable to check the MD5 of package. ", module, output);
+                    //文件MD5未能正确运算 可能原因:权限不足
+                    Log.SaveLog(ex.ToString(), module, output);
+                    Console.WriteLine("Failed to install.View log file for details.");
+                    Console.WriteLine("Press any key to exit...");
+                    return;
+                }
+                if (config["runtimeMD5"] as string == packageMD5)
+                {
+                    Log.SaveLog("Package's MD5 is correct.", module, output);
+                    //运行库完整
+                }
+                else
+                {
+                    //MD5不正确,程序包可能存在破损
+                    //若允许,重新下载运行库
+                    if (config["allowRedownloadPackage"] as string == "true")
+                    {
+                        try
+                        {
+                            HttpDownload(config["packageURL"] as string, $"./package.{config["packageType"]}");
+                            //开始下载
+                            if (File.Exists($"./package.{config["packageType"]}"))
+                            {
+                                Log.SaveLog("Package downloading successful.", "HttpDownload", output);
+                                //下载成功
+                            }
+                            else
+                            {
+                                Log.SaveLog("Unable to download package : File does not exist.", module, output);
+                                //下载没有出现异常,但是文件不存在
+                                Console.WriteLine("Failed to install.View log file for details.");
+                                Console.WriteLine("Press any key to exit...");
+                                Console.ReadKey();
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.SaveLog(ex.ToString(), "HttpDownload", output);
+                            Log.SaveLog("Unable to download package : Unexpected exception.", "HttpDownload", output);
+                            //下载出现异常
+                            Console.WriteLine("Failed to install.View log file for details.");
+                            Console.WriteLine("Press any key to exit...");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        Log.SaveLog("Runtime's MD5 is incorrect. Damaged package.", module, output);
+                        Console.WriteLine("Failed to install.View log file for details.");
+                        Console.WriteLine("Press any key to exit...");
+                        Console.ReadKey();
+                        return;
+                    }
+                }
+
+            }
+            #endregion
+
+            Log.SaveLog("Packages' MD5 checked.", "PackageChecker", output);
+
         }
 
 
@@ -190,9 +415,9 @@ namespace RuntimeInstaller
         /// <param name="path">文件存放地址，包含文件名</param>
         public static void HttpDownload(string url, string path)
         {
-            string tempPath = Path.GetDirectoryName(path) + @"\temp";
+            string tempPath = Path.GetDirectoryName(path) + @"/temp";
             Directory.CreateDirectory(tempPath);  //创建临时文件目录
-            string tempFile = tempPath + @"\" + Path.GetFileName(path) + ".temp"; //临时文件
+            string tempFile = tempPath + @"/" + Path.GetFileName(path) + ".temp"; //临时文件
             if (File.Exists(tempFile))
             {
                 File.Delete(tempFile);    //存在则删除
