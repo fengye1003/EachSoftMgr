@@ -28,7 +28,7 @@ namespace RuntimeInstaller
                 { "runtimeType", "exe" },//运行时后缀
                 { "allowRedownloadRuntime", "true" },//如果运行时MD5不正确是否重新下载
                 { "allowSkipOnlineRuntimeChecking", "true" },//如果运行时MD5不是URL指定的最新版且无法下载时是否允许跳过
-                { "afterArgs", "-I" },//安装包安装参数
+                { "packageArgs", "-I" },//安装包安装参数
                 { "doPackageChecking", "true" },//是否校验运行时
                 { "doRuntimeChecking", "true" },//是否校验安装包
                 { "runtimeMD5", "none" },//运行时MD5校验值
