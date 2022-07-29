@@ -72,6 +72,10 @@ namespace RuntimeInstaller
         {
 
             Hashtable ht = Load(path);
+            if (ht == null) 
+            {
+                ht = new();
+            }
             foreach (string key in htStandard.Keys)
             {
                 if (!ht.Contains(key)) ht.Add(key, htStandard[key] as string);
@@ -85,10 +89,18 @@ namespace RuntimeInstaller
         {
             bool isFixed = true;
             Hashtable ht = Load(path);
-            foreach (string key in htStandard.Keys)
+            if (ht == null)
             {
-                if (!ht.Contains(key)) isFixed = false;
+                isFixed = false;
             }
+            else
+            {
+                foreach (string key in htStandard.Keys)
+                {
+                    if (!ht.Contains(key)) isFixed = false;
+                }
+            }
+            
             if (!isFixed)
                 return FixProperties(htStandard, path);
             else

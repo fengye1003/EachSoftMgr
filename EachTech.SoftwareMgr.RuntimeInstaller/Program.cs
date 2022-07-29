@@ -4,6 +4,7 @@ using System.Collections;
 using System.Security.Cryptography;
 using System.Net;
 using System.Text;
+using System.Diagnostics;
 
 namespace RuntimeInstaller
 {
@@ -39,7 +40,7 @@ namespace RuntimeInstaller
                 { "allowSkipOnlinePackageChecking", "true" },//如果安装包MD5不是URL指定的最新版且无法下载时是否允许跳过
                 { "latestRuntimeMD5-URL", "none" },//运行时MD5链接(可用于检查更新)
                 { "latestPackageMD5-URL", "none" },//安装包MD5链接(可用于检查更新)
-                { "waitUntilExit", "true" },//是否等待安装进程退出
+                { "waitForExit", "true" },//是否等待安装进程退出
                 { "openAfterDone", "none" }//在完成安装后打开的文件
             };
             Directory.CreateDirectory("./config/");
@@ -78,6 +79,7 @@ namespace RuntimeInstaller
                     {
                         Log.SaveLog("Runtime package downloading successful.", "HttpDownload", output);
                         //下载成功
+                        config["runtimePath"] = $"./runtime.{config["runtimeType"]}";
                     }
                     else
                     {
@@ -111,7 +113,7 @@ namespace RuntimeInstaller
                     Log.SaveLog("Unable to locate runtime package : File does not exist.", "Locating runtime", output);
                     Log.SaveLog("Preparing for package downloading...", output);
                     //本地运行时不存在,尝试从网络下载
-                    if (((string)config["runtimeURL"]).Contains("://"))
+                    if ((config["runtimeURL"] as string).Contains("://"))
                     {
                         try
                         {
@@ -121,6 +123,7 @@ namespace RuntimeInstaller
                             {
                                 Log.SaveLog("Runtime package downloading successful.", "HttpDownload", output);
                                 //下载成功
+                                config["runtimePath"] = $"./runtime.{config["runtimeType"]}";
                             }
                             else
                             {
@@ -195,6 +198,7 @@ namespace RuntimeInstaller
                             {
                                 Log.SaveLog("Runtime package downloading successful.", "HttpDownload", output);
                                 //下载成功
+                                config["runtimePath"] = $"./runtime.{config["runtimeType"]}";
                             }
                             else
                             {
@@ -246,6 +250,7 @@ namespace RuntimeInstaller
                                 {
                                     Log.SaveLog("Runtime package downloading successful.", "HttpDownload", output);
                                     //下载成功
+                                    config["runtimePath"] = $"./runtime.{config["runtimeType"]}";
                                 }
                                 else
                                 {
@@ -320,6 +325,7 @@ namespace RuntimeInstaller
                     {
                         Log.SaveLog("Package downloading successful.", "HttpDownload", output);
                         //下载成功
+                        config["packagePath"] = $"./package.{config["packageType"]}";
                     }
                     else
                     {
@@ -363,6 +369,7 @@ namespace RuntimeInstaller
                             {
                                 Log.SaveLog("Package downloading successful.", "HttpDownload", output);
                                 //下载成功
+                                config["packagePath"] = $"./package.{config["packageType"]}";
                             }
                             else
                             {
@@ -438,6 +445,7 @@ namespace RuntimeInstaller
                             {
                                 Log.SaveLog("Package downloading successful.", "HttpDownload", output);
                                 //下载成功
+                                config["packagePath"] = $"./package.{config["packageType"]}";
                             }
                             else
                             {
@@ -469,7 +477,7 @@ namespace RuntimeInstaller
                     }
                 }
 
-                if (((string)config["latestPackageMD5-URL"]).Contains("://"))
+                if ((config["latestPackageMD5-URL"] as string).Contains("://"))
                 {
                     try
                     {
@@ -489,6 +497,7 @@ namespace RuntimeInstaller
                                 {
                                     Log.SaveLog("Package downloading successful.", "HttpDownload", output);
                                     //下载成功
+                                    config["packagePath"] = $"./package.{config["packageType"]}";
                                 }
                                 else
                                 {
@@ -538,8 +547,37 @@ namespace RuntimeInstaller
 
             Log.SaveLog("Packages' MD5 checked.", "PackageChecker", output);
 
-
-
+            #region RuntimeInstaller
+            module = "RuntimeInstaller";
+            Log.SaveLog("Preparing for runtime installation...", module, output);
+            Process runtimeInstaller = new();
+            runtimeInstaller.StartInfo.FileName = config["runtimePath"] as string;
+            runtimeInstaller.StartInfo.Arguments = config["runtimeArgs"] as string;
+            runtimeInstaller.Start();
+            runtimeInstaller.WaitForExit();
+            Log.SaveLog("Runtime installer finished.", module, output);
+            #endregion
+            #region PackageInstaller
+            module = "PackageInstaller";
+            Log.SaveLog("Preparing for package installation...", module, output);
+            Process packageInstaller = new();
+            packageInstaller.StartInfo.FileName = config["packagePath"] as string;
+            packageInstaller.StartInfo.Arguments = config["packageArgs"] as string;
+            packageInstaller.Start();
+            if (config["waitForExit"] as string == "true") 
+            {
+                packageInstaller.WaitForExit();
+                Log.SaveLog("Package installer finished(exited).", module, output);
+            }
+            else
+            {
+                Log.SaveLog("Package installer started.");
+            }
+            if (config["openAfterDone"] as string != "none") 
+            {
+                Process.Start(config["openAfterDone"] as string);
+            }
+            #endregion
         }
 
         /// <summary>
