@@ -69,6 +69,7 @@ namespace RuntimeInstaller
                     Log.SaveLog("Invaild URL", "Downloader:" + module, output);
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
                     return;
                 }
                 try
@@ -98,6 +99,7 @@ namespace RuntimeInstaller
                     //下载出现异常
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
                     return;
                 }
             }
@@ -142,6 +144,7 @@ namespace RuntimeInstaller
                             //下载出现异常
                             Console.WriteLine("Failed to install.View log file for details.");
                             Console.WriteLine("Press any key to exit...");
+                            Console.ReadKey();
                             return;
                         }
                     }
@@ -151,6 +154,7 @@ namespace RuntimeInstaller
                         //URL未指定或出现错误
                         Console.WriteLine("Failed to install.View log file for details.");
                         Console.WriteLine("Press any key to exit...");
+                        Console.ReadKey();
                         return;
                     }
                     
@@ -177,6 +181,7 @@ namespace RuntimeInstaller
                     Log.SaveLog(ex.ToString(), module, output);
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
                     return;
                 }
                 if (config["runtimeMD5"] as string == runtimeMD5) 
@@ -217,6 +222,7 @@ namespace RuntimeInstaller
                             //下载出现异常
                             Console.WriteLine("Failed to install.View log file for details.");
                             Console.WriteLine("Press any key to exit...");
+                            Console.ReadKey();
                             return;
                         }
                     }
@@ -315,6 +321,7 @@ namespace RuntimeInstaller
                     Log.SaveLog("Invaild URL", "Downloader:" + module, output);
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
                     return;
                 }
                 try
@@ -344,6 +351,7 @@ namespace RuntimeInstaller
                     //下载出现异常
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
                     return;
                 }
             }
@@ -388,6 +396,7 @@ namespace RuntimeInstaller
                             //下载出现异常
                             Console.WriteLine("Failed to install.View log file for details.");
                             Console.WriteLine("Press any key to exit...");
+                            Console.ReadKey();
                             return;
                         }
                     }
@@ -397,6 +406,7 @@ namespace RuntimeInstaller
                         //URL未指定或出现错误
                         Console.WriteLine("Failed to install.View log file for details.");
                         Console.WriteLine("Press any key to exit...");
+                        Console.ReadKey();
                         return;
                     }
 
@@ -424,6 +434,7 @@ namespace RuntimeInstaller
                     Log.SaveLog(ex.ToString(), module, output);
                     Console.WriteLine("Failed to install.View log file for details.");
                     Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
                     return;
                 }
                 if (config["runtimeMD5"] as string == packageMD5)
@@ -464,6 +475,7 @@ namespace RuntimeInstaller
                             //下载出现异常
                             Console.WriteLine("Failed to install.View log file for details.");
                             Console.WriteLine("Press any key to exit...");
+                            Console.ReadKey();
                             return;
                         }
                     }
@@ -577,6 +589,8 @@ namespace RuntimeInstaller
             {
                 Process.Start(config["openAfterDone"] as string);
             }
+            Console.WriteLine("Installation finished. Press any key to exit.");
+            Console.ReadKey();
             #endregion
         }
 
