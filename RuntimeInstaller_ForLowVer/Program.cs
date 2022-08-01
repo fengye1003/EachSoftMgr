@@ -41,7 +41,8 @@ namespace RuntimeInstaller_ForLowVer
                 { "latestRuntimeMD5-URL", "none" },//运行时MD5链接(可用于检查更新)
                 { "latestPackageMD5-URL", "none" },//安装包MD5链接(可用于检查更新)
                 { "waitForExit", "true" },//是否等待安装进程退出
-                { "openAfterDone", "none" }//在完成安装后打开的文件
+                { "openAfterDone", "none" },//在完成安装后打开的文件
+                { "tip", "If you want to use equal sign, use \"\\e\" instead." }//提示
             };
             Directory.CreateDirectory("./config/");
             Hashtable config = PropertiesHelper.AutoCheck(htStandard, "./config/runtime.properties");
