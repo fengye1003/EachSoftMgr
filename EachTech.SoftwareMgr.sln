@@ -12,6 +12,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuntimeInstaller_ForLowVer", "RuntimeInstaller_ForLowVer\RuntimeInstaller_ForLowVer.csproj", "{BA0C4055-F2BA-4D4A-B14C-F8EFFF2E7C50}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetArgs", "GetArgs\GetArgs.csproj", "{46CE42BB-5474-47F4-9C77-9C0D7B45722E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +30,14 @@ Global
 		{89BE26D4-5568-4D7B-A694-0D00265771BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89BE26D4-5568-4D7B-A694-0D00265771BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89BE26D4-5568-4D7B-A694-0D00265771BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA0C4055-F2BA-4D4A-B14C-F8EFFF2E7C50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA0C4055-F2BA-4D4A-B14C-F8EFFF2E7C50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA0C4055-F2BA-4D4A-B14C-F8EFFF2E7C50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA0C4055-F2BA-4D4A-B14C-F8EFFF2E7C50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46CE42BB-5474-47F4-9C77-9C0D7B45722E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46CE42BB-5474-47F4-9C77-9C0D7B45722E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46CE42BB-5474-47F4-9C77-9C0D7B45722E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46CE42BB-5474-47F4-9C77-9C0D7B45722E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
