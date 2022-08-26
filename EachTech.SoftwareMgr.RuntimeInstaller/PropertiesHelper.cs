@@ -44,6 +44,15 @@ namespace RuntimeInstaller
                 {
                     ht[kv[0].Trim()] = kv[1].Trim();
                 }
+                else
+                {
+                    string value = "";
+                    for (int i = 1; i < kv.Length; i++)
+                    {
+                        value = value + "=" + kv[i];
+                    }
+                    ht[kv[0].Trim()] = value.Trim();
+                }
             }
             return ht;
         }
