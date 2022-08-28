@@ -11,7 +11,7 @@ using System.Text;
 
 //Re-edited by Fengye1003
 //Updated by Each. Tech.
-//Completed at 2022/07/23 12:15
+//Completed at 2022/08/28 12:14
 
 
 namespace RuntimeInstaller
@@ -52,6 +52,7 @@ namespace RuntimeInstaller
                         value = value + "=" + kv[i];
                     }
                     ht[kv[0].Trim()] = value.Trim();
+                    //To solve the problem of multi-"=";
                 }
             }
             return ht;
