@@ -49,7 +49,10 @@ namespace RuntimeInstaller
                     string value = "";
                     for (int i = 1; i < kv.Length; i++)
                     {
-                        value = value + "=" + kv[i];
+                        if (i == 1)
+                            value = kv[i];
+                        else
+                            value = value + "=" + kv[i];
                     }
                     ht[kv[0].Trim()] = value.Trim();
                     //To solve the problem of multi-"=";

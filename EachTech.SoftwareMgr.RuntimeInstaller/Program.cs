@@ -198,6 +198,8 @@ namespace RuntimeInstaller
                     {
                         try
                         {
+                            if(File.Exists($"./runtime.{config["runtimeType"]}"))
+                                File.Delete($"./runtime.{config["runtimeType"]}");
                             HttpDownload(config["runtimeURL"] as string, $"./runtime.{config["runtimeType"]}");
                             //开始下载
                             if (File.Exists($"./runtime.{config["runtimeType"]}"))
@@ -251,6 +253,8 @@ namespace RuntimeInstaller
 
                             try
                             {
+                                if (File.Exists($"./runtime.{config["runtimeType"]}"))
+                                    File.Delete($"./runtime.{config["runtimeType"]}");
                                 HttpDownload(config["runtimeURL"] as string, $"./runtime.{config["runtimeType"]}");
                                 //开始下载
                                 if (File.Exists($"./runtime.{config["runtimeType"]}"))
@@ -451,6 +455,8 @@ namespace RuntimeInstaller
                     {
                         try
                         {
+                            if(File.Exists($"./package.{config["packageType"]}"))
+                                File.Delete($"./package.{config["packageType"]}");
                             HttpDownload(config["packageURL"] as string, $"./package.{config["packageType"]}");
                             //开始下载
                             if (File.Exists($"./package.{config["packageType"]}"))
@@ -504,6 +510,8 @@ namespace RuntimeInstaller
 
                             try
                             {
+                                if (File.Exists($"./package.{config["packageType"]}"))
+                                    File.Delete($"./package.{config["packageType"]}");
                                 HttpDownload(config["packageURL"] as string, $"./package.{config["packageType"]}");
                                 //开始下载
                                 if (File.Exists($"./package.{config["packageType"]}"))
@@ -653,6 +661,7 @@ namespace RuntimeInstaller
                 fs.Close();
                 responseStream.Close();
                 File.Move(tempFile, path);
+                File.Delete(tempFile);
                 
             }
             catch
